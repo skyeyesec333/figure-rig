@@ -1,0 +1,317 @@
+{
+ "triangles": 14000,
+ "map": 1024,
+ "map_q": 78,
+ "sole": 7.4,
+ "cut": 7.5,
+ "crumb": 11.5,
+ "soft": 0.22,
+ "smooth": 8,
+ "joints": {
+  "Hips": [
+   1.0,
+   1.0,
+   41
+  ],
+  "Spine": [
+   1.2,
+   0.6,
+   45
+  ],
+  "Spine1": [
+   1.5,
+   0.1,
+   49.5
+  ],
+  "Spine2": [
+   1.8,
+   -0.4,
+   54
+  ],
+  "Neck": [
+   2.2,
+   -1.0,
+   59
+  ],
+  "Head": [
+   2.5,
+   -1.6,
+   62.5
+  ],
+  "HeadTop_End": [
+   2.7,
+   -2.2,
+   71.5
+  ],
+  "LeftShoulder": [
+   4.3,
+   -0.4,
+   56.5
+  ],
+  "LeftArm": [
+   11.5,
+   -0.5,
+   56.3
+  ],
+  "LeftForeArm": [
+   15.0,
+   -1.4,
+   48
+  ],
+  "LeftHand": [
+   14.2,
+   -6.2,
+   42.3
+  ],
+  "LeftHandMiddle4": [
+   13.6,
+   -8,
+   39.5
+  ],
+  "RightShoulder": [
+   -0.7,
+   -0.4,
+   56.5
+  ],
+  "RightArm": [
+   -8.7,
+   0,
+   57.3
+  ],
+  "RightForeArm": [
+   -13.5,
+   -1.5,
+   52
+  ],
+  "RightHand": [
+   -12.5,
+   -5.5,
+   58.5
+  ],
+  "RightHandMiddle4": [
+   -12,
+   -8.3,
+   61.8
+  ],
+  "LeftUpLeg": [
+   4.6,
+   1.2,
+   38
+  ],
+  "LeftLeg": [
+   6.7,
+   1.5,
+   24.5
+  ],
+  "LeftFoot": [
+   8.1,
+   2.4,
+   11.8
+  ],
+  "LeftToeBase": [
+   12,
+   -3.5,
+   8.3
+  ],
+  "LeftToe_End": [
+   15,
+   -8,
+   8
+  ],
+  "RightUpLeg": [
+   -2.6,
+   1.0,
+   38
+  ],
+  "RightLeg": [
+   -7.8,
+   -1.5,
+   24.5
+  ],
+  "RightFoot": [
+   -9.5,
+   0.3,
+   12
+  ],
+  "RightToeBase": [
+   -12,
+   -4.5,
+   8.3
+  ],
+  "RightToe_End": [
+   -14.5,
+   -8.2,
+   8
+  ]
+ },
+ "radius": {
+  "pelvis_drop": 4,
+  "Hips": 9.5,
+  "Spine": 9,
+  "Spine1": 9,
+  "Spine2": 9.5,
+  "Neck": 3.2,
+  "Head": 6,
+  "Shoulder": 4,
+  "Arm": 4.2,
+  "ForeArm": 3.2,
+  "Hand": 3,
+  "UpLeg": 6.5,
+  "Leg": 4.5,
+  "Foot": 3.5,
+  "ToeBase": 3.5
+ },
+ "props": [
+  {
+   "name": "hammer",
+   "bone": "RightHand",
+   "boxes": [
+    [
+     [
+      5.2,
+      3.8,
+      60.5
+     ],
+     [
+      18,
+      16,
+      76
+     ]
+    ],
+    [
+     [
+      5.2,
+      5.0,
+      58
+     ],
+     [
+      18,
+      16,
+      60.5
+     ]
+    ]
+   ],
+   "rods": [
+    [
+     [
+      -17.5,
+      -11.5,
+      58.5
+     ],
+     [
+      6,
+      6,
+      65.5
+     ],
+     1.6
+    ]
+   ],
+   "cut_from": [
+    "Spine",
+    "Spine1",
+    "Spine2",
+    "Neck",
+    "Head",
+    "RightShoulder",
+    "LeftShoulder",
+    "RightArm",
+    "LeftArm"
+   ],
+   "spare": {
+    "luma": [
+     0.5,
+     1
+    ],
+    "sat": [
+     0,
+     0.4
+    ]
+   }
+  },
+  {
+   "name": "scrolls",
+   "bone": "LeftForeArm",
+   "boxes": [
+    [
+     [
+      5.5,
+      -14.5,
+      36.3
+     ],
+     [
+      20.5,
+      -3.0,
+      45.8
+     ]
+    ],
+    [
+     [
+      9.5,
+      -14.5,
+      45.8
+     ],
+     [
+      20.5,
+      -3.0,
+      49.8
+     ]
+    ],
+    [
+     [
+      10.3,
+      -3.0,
+      42.5
+     ],
+     [
+      21,
+      8,
+      49.8
+     ]
+    ],
+    [
+     [
+      16.5,
+      -3.0,
+      36.5
+     ],
+     [
+      21,
+      6,
+      42.5
+     ]
+    ]
+   ],
+   "cut_from": [
+    "Hips",
+    "Spine",
+    "Spine1",
+    "LeftUpLeg",
+    "RightUpLeg"
+   ],
+   "luma": [
+    0.5,
+    1
+   ],
+   "sat": [
+    0,
+    0.42
+   ],
+   "grow": 5,
+   "grow_at": 0.4,
+   "bones": [
+    "LeftHand"
+   ]
+  }
+ ],
+ "debug": [
+  {
+   "name": "scrolls",
+   "at": [
+    12,
+    -3,
+    43
+   ],
+   "size": 24
+  }
+ ]
+}

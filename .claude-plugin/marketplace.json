@@ -1,0 +1,8 @@
+{
+  "name": "figure-rig",
+  "description": "Rig a static sculpt onto a Mixamo skeleton so it plays that skeleton's clips.",
+  "owner": { "name": "skyeyesec333" },
+  "plugins": [
+    { "name": "figure-rig", "source": "./", "description": "Skill: figure-rig. Marking views, a fit file, and a Blender script that binds a donor's Mixamo skeleton to a static sculpt in its own pose, pins props, and writes a light skinned GLB.", "category": "development", "tags": ["3d", "rigging", "mixamo", "blender", "threejs"] }
+  ]
+}
