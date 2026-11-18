@@ -17,10 +17,10 @@ Image-to-3D tools give you a sculpt: one fused shell, posed however the picture 
 
 Show the user the views, the debug renders and the held frames as you go. Fix a miss in fit.json and run again; a run takes seconds.
 
-`scripts/` below means the `scripts/` folder in **this skill's base directory**, not the user's project: as a plugin that is `${CLAUDE_PLUGIN_ROOT}/skills/figure-rig/scripts/`, as a plain skill `~/.claude/skills/figure-rig/scripts/`. The commands below use `S` for it:
+`scripts/` below means the `scripts/` folder in **this skill's base directory**, not the user's project: `${CLAUDE_SKILL_DIR}/scripts` (Claude Code fills in the skill's directory for a plugin or a copied skill alike). The commands below use `S` for it:
 
 ```sh
-S="${CLAUDE_PLUGIN_ROOT:-$HOME/.claude}/skills/figure-rig/scripts"
+S="${CLAUDE_SKILL_DIR}/scripts"
 ```
 
 ## 1. Views
