@@ -17,10 +17,16 @@ Image-to-3D tools give you a sculpt: one fused shell, posed however the picture 
 
 Show the user the views, the debug renders and the held frames as you go. Fix a miss in fit.json and run again; a run takes seconds.
 
+`scripts/` below means the `scripts/` folder in **this skill's base directory**, not the user's project: as a plugin that is `${CLAUDE_PLUGIN_ROOT}/skills/figure-rig/scripts/`, as a plain skill `~/.claude/skills/figure-rig/scripts/`. The commands below use `S` for it:
+
+```sh
+S="${CLAUDE_PLUGIN_ROOT:-$HOME/.claude}/skills/figure-rig/scripts"
+```
+
 ## 1. Views
 
 ```sh
-blender -b --factory-startup --python scripts/views.py -- <sculpt.glb> <build>/<name> [--fit <name>.fit.json] [--grid 1]
+blender -b --factory-startup --python "$S/views.py" -- <sculpt.glb> <build>/<name> [--fit <name>.fit.json] [--grid 1]
 ```
 
 Writes `<name>-front.png`, `-left.png`, `-top.png` and `-views.json` (each picture's millimetre range, so a pixel reads back as a coordinate). Millimetres are the file's units x 1000, Z up, the figure facing -Y, its left at +X: the space `fit.json` uses. With `--fit` every marked joint is drawn as a dot (left green, right red, centre yellow) and each prop box as a cyan outline. Re-render with `--fit` after every marking pass and look before rigging.
@@ -39,7 +45,7 @@ Start from [references/example.fit.json](references/example.fit.json) (an exampl
 ## 3. Rig
 
 ```sh
-blender -b --factory-startup --python scripts/figure_rig.py -- <sculpt.glb> <donor.glb> <name>.fit.json <out.glb> [--debug <build>/<name>]
+blender -b --factory-startup --python "$S/figure_rig.py" -- <sculpt.glb> <donor.glb> <name>.fit.json <out.glb> [--debug <build>/<name>]
 ```
 
 It prints the joint misses (should be under a millimetre), the figure's leg length against the donor's, the pieces it found and dropped, each prop's vertex count, the bridging triangles cut, the holes it capped and the file size. A typical result is 14K triangles at about 0.7 MB.

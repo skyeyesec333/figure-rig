@@ -26,6 +26,8 @@ import bpy, bmesh, re
 import numpy as np
 
 SRC, DONOR, FIT, OUT = args.sculpt, args.donor, args.fit, args.out
+for _src in (SRC, DONOR, FIT):
+    if os.path.exists(OUT) and os.path.samefile(OUT, _src): sys.exit(f"[rig] the output would overwrite an input ({_src}): give another path")
 fit = json.load(open(FIT))
 MM = 0.001
 
@@ -48,8 +50,27 @@ def qmat(q):
     return np.array([[1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
                      [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
                      [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]])
+def mquat(m):
+    """rotation matrix -> quaternion (x, y, z, w)"""
+    t = np.trace(m)
+    if t > 0:
+        r = np.sqrt(1 + t) * 2; return [(m[2, 1] - m[1, 2]) / r, (m[0, 2] - m[2, 0]) / r, (m[1, 0] - m[0, 1]) / r, r / 4]
+    i = int(np.argmax(np.diag(m))); j, k = (i + 1) % 3, (i + 2) % 3
+    r = np.sqrt(1 + m[i, i] - m[j, j] - m[k, k]) * 2; q = [0.0] * 4
+    q[i] = r / 4; q[j] = (m[j, i] + m[i, j]) / r; q[k] = (m[k, i] + m[i, k]) / r; q[3] = (m[k, j] - m[j, k]) / r
+    return q
+for nd in nodes:                                       # a node written as a matrix: the same thing as translation, rotation, scale
+    if "matrix" in nd:
+        M_ = np.array(nd.pop("matrix"), float).reshape(4, 4).T
+        S_ = np.linalg.norm(M_[:3, :3], axis=0)
+        nd["translation"] = M_[:3, 3].tolist(); nd["rotation"] = mquat(M_[:3, :3] / S_); nd["scale"] = S_.tolist()
 T = [np.array(nd.get("translation", [0, 0, 0]), float) for nd in nodes]
 R = [qmat(nd.get("rotation", [0, 0, 0, 1])) for nd in nodes]
+_joints = set(sj["skins"][0]["joints"])
+_scaled = [nd.get("name", i) for i, nd in enumerate(nodes) if i in _joints and not np.allclose(nd.get("scale", [1, 1, 1]), 1, atol=1e-4)]
+if _scaled: print(f"[rig] warning: these donor bones carry a scale, which the fit ignores: {_scaled}")
+# Nodes above the skeleton (an Armature at 0.01 from Blender's FBX import) keep their transform in the output, so the
+# figure comes out at the donor's size. Everything below is fitted in the skeleton's own units.
 order = []
 def walk(i):
     order.append(i)
@@ -71,6 +92,11 @@ lack = [b for b in NEED if b not in idx]
 if lack: sys.exit(f"[rig] the donor lacks bones: {lack} (needs Mixamo names; see references/fit-format.md)")
 lack = [b for b in NEED if b not in fit["joints"]]
 if lack: sys.exit(f"[rig] fit.json lacks joints: {lack}")
+unknown = [b for b in fit["joints"] if b not in idx]
+if unknown: sys.exit(f"[rig] fit.json names joints the donor does not have: {unknown}")
+for _pr in fit.get("props", []):
+    _bad = [b for b in [_pr.get("bone")] + _pr.get("bones", []) + _pr.get("cut_from", []) if b is not None and b not in idx]
+    if _bad or "bone" not in _pr: sys.exit(f"[rig] prop {_pr.get('name', '?')}: 'bone' is required and these bones are not in the donor: {_bad}")
 J = fit["joints"]; hips_mm = np.array(J["Hips"], float); sole = fit["sole"]
 HIPS_H = args.hips_height or fit.get("hips_height") or float(T[idx["Hips"]][1])
 K = HIPS_H / (hips_mm[2] - sole)                       # the statue's hips go where the donor's rest
@@ -186,7 +212,10 @@ rgb = px[np.clip((vuv[:, 1] * ih).astype(int), 0, ih - 1), np.clip((vuv[:, 0] * 
 luma = rgb @ np.array([0.299, 0.587, 0.114]); sat = (rgb.max(1) - rgb.min(1)) / np.maximum(rgb.max(1), 1e-6)
 if os.environ.get("RIG_DEBUG"):
     for nm in ("LeftForeArm", "RightForeArm", "LeftHand"):
-        ci = next(k for k, c_ in enumerate(caps) if short[c_[0]] == nm); m = score[:, ci] < 0.9
+        ci = next((k for k, c_ in enumerate(caps) if short[c_[0]] == nm), None)
+        if ci is None: continue
+        m = score[:, ci] < 0.9
+        if not m.any(): print(f"[rig] colour near {nm}: no vertices within its capsule"); continue
         print(f"[rig] colour near {nm}: n {int(m.sum())} luma {np.percentile(luma[m], [10, 50, 90]).round(2)} sat {np.percentile(sat[m], [10, 50, 90]).round(2)}")
 # props: whole to one bone, and kept out of the smoothing
 pinned = np.zeros(nv, bool); group = np.full(nv, -1)
@@ -234,7 +263,7 @@ for gi, pr in enumerate(fit.get("props", [])):
     if pr.get("delete"): keep &= ~(group[tri] == gi).any(1)
 print(f"[rig] {int((~keep).sum())} bridging or deleted triangles left out")
 if os.environ.get("RIG_DEBUG"):
-    # pictures of who owns what round a prop: true colour beside the classes (prop white, each bone its own colour)
+    # pictures of who owns what round a prop: true colour beside the classes (props tinted blue, each bone its own colour)
     import math
     from mathutils import Vector
     dbg = os.path.splitext(os.environ["RIG_DEBUG"])[0]
@@ -253,10 +282,10 @@ if os.environ.get("RIG_DEBUG"):
     for rg in fit.get("debug", []):
         cen = Vector(rg["at"]) * MM; cam.ortho_scale = rg["size"] * MM
         for vn_, (off, rot) in {"front": ((0, -1, 0), (90, 0, 0)), "left": ((1, 0, 0), (90, 0, 90)), "back": ((0, 1, 0), (90, 0, 180)), "top": ((0, 0, 1), (0, 0, 0)), "under": ((0, 0, -1), (180, 0, 0)), "fl": ((.7, -.7, .3), (72, 0, 45))}.items():
-            co_.location = cen + Vector(off) * 0.2; co_.rotation_euler = tuple(math.radians(r_) for r_ in rot)
+            co_.location = cen + Vector(off) * max(0.2, rg["size"] * MM * 2); co_.rotation_euler = tuple(math.radians(r_) for r_ in rot)
             for nm in ("true", "cls"):
                 me.color_attributes.active_color = me.color_attributes[nm]; me.color_attributes.render_color_index = me.color_attributes.find(nm)
-                sc.render.filepath = f"{dbg}-{rg['name']}-{vn_}-{nm}.png"; bpy.ops.render.render(write_still=True)
+                sc.render.filepath = f"{dbg}-{re.sub(r'[^A-Za-z0-9._-]', '_', str(rg['name']))}-{vn_}-{nm}.png"; bpy.ops.render.render(write_still=True)
     bpy.data.objects.remove(obd)
 gone = tri[~keep]
 luv = uv.reshape(-1, 3, 2)[keep].reshape(-1, 2); tri = tri[keep]
@@ -291,6 +320,8 @@ if add_v:
     tri = np.vstack([tri, np.array(caps_t)]); luv = np.vstack([luv, np.array(caps_uv, np.float32)])
 print(f"[rig] {nloops} holes capped with {len(caps_t)} triangles")
 lvk = tri.reshape(-1)
+_skin = sj["skins"][0]["joints"]; _off = np.setdiff1d(np.arange(NN), _skin)
+W[:, _off] = 0; W /= np.maximum(W.sum(1, keepdims=True), 1e-12)   # only the skin's joints may carry weight
 top = np.argsort(-W, 1)[:, :4]; tw = np.take_along_axis(W, top, 1); tw /= tw.sum(1, keepdims=True)
 
 # ---------- the file ----------
@@ -299,7 +330,7 @@ key = np.concatenate([lvk[:, None].astype(np.float64), np.round(luv, 5)], 1)
 uniq, inv = np.unique(key, axis=0, return_inverse=True)
 vi = uniq[:, 0].astype(int); inv = inv.reshape(-1)
 pos = V[vi].astype(np.float32); nor = Nn[vi].astype(np.float32); tex = np.stack([uniq[:, 1], 1 - uniq[:, 2]], 1).astype(np.float32)
-jn = np.vectorize(slot.get)(top[vi]).astype(np.uint8); wt = tw[vi].astype(np.float32)
+jn = np.vectorize(lambda n: slot.get(n, 0))(top[vi]).astype(np.uint8); wt = tw[vi].astype(np.float32)
 jn[wt == 0] = 0
 ind = inv.astype(np.uint32)
 ibm = np.zeros((len(skin_joints), 16), np.float32)
@@ -337,14 +368,16 @@ a_nor = acc(nor8, "VEC3", 5120, 34962, norm=True, stride=4)
 a_tex = acc(tex16, "VEC2", 5123, 34962, norm=True); a_j = acc(jn, "VEC4", 5121, 34962); a_w = acc(w8, "VEC4", 5121, 34962, norm=True); a_ibm = acc(ibm, "MAT4", 5126)
 v_img = view(img)
 EXT = (["EXT_texture_webp"] if MIME == "image/webp" else []) + ["KHR_mesh_quantization"]
-out_nodes = []
+out_nodes = []; placed = False
 for i, nd in enumerate(nodes):
     o = {"name": nd.get("name", "")}
     if "children" in nd: o["children"] = nd["children"]
     if "rotation" in nd: o["rotation"] = nd["rotation"]
     if "translation" in nd: o["translation"] = (T[i] * scale[i]).tolist()
-    if "mesh" in nd: o["mesh"] = 0; o["skin"] = 0
+    if "scale" in nd and i not in _joints: o["scale"] = nd["scale"]
+    if "mesh" in nd and not placed: o["mesh"] = 0; o["skin"] = 0; placed = True   # the figure once, on the donor's first mesh node
     out_nodes.append(o)
+if not placed: sys.exit("[rig] the donor has no mesh node to hang the figure on")
 g = {
     "asset": {"version": "2.0", "generator": "figure-rig"},
     "extensionsUsed": EXT, "extensionsRequired": EXT,

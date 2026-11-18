@@ -1,7 +1,7 @@
 {
   "name": "figure-rig",
   "displayName": "Figure Rig",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Rig a static 3D sculpt (a Meshy figure on a base, one fused mesh, no skeleton) onto a donor's Mixamo skeleton in its own pose, so it plays the donor's animation clips.",
   "author": { "name": "skyeyesec333" },
   "license": "MIT",

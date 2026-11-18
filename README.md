@@ -42,7 +42,7 @@ Ask in any project:
 - "Rig figure.glb onto dancer.glb"
 - "The scrolls come off his hand when he spins; fix the rig"
 
-or call it directly: `/figure-rig figure.glb donor.glb`.
+or call it directly: `/figure-rig figure.glb donor.glb` (installed as a plugin it is namespaced: `/figure-rig:figure-rig figure.glb donor.glb`).
 
 The scripts also run without Claude:
 
